@@ -22,10 +22,7 @@ class flu (general_pipe):
    
     #split all bam files by segments
     def split_bam(self):
-        for bam_file in os.listdir("BAM/"):        
-            if "bam" in bam_file:
-                subprocess.call(SPLIT % dict(bam="BAM/"+bam_file), shell=True)
-                os.remove("BAM/" + bam_file)
+        utils.split_bam()
     
     def concat_samples(self):
         os.makedirs("CNS_5/per_sample")
@@ -57,9 +54,10 @@ class flu (general_pipe):
                  if segment in file_name:
                      file = open("CNS_5/" + file_name, 'r')
                      segment_file.write(file.read())
+                     file.close()
         ref.close()
         segment_file.close()
-        file.close
+        
             
     def mafft(self):
         #all samples without segment and not aligned
