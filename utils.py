@@ -29,7 +29,7 @@ def get_r1r2_list(fastq_path):
         if any(skip_file in r1 for skip_file in skip_files) or "fast" not in r1:
             continue
         r2 = r1.replace("R1","R2")
-        sample = r1.split("_")[0] #sample short name
+        sample = r1.split("_")[0].split(".fastq")[0] #sample short name
         r1r2_list.append([sample,r1,r2])
     return r1r2_list
  

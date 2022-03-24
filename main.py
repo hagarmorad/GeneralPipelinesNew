@@ -30,7 +30,7 @@ if __name__ == "__main__":
     
     mutex = Lock()
  
-    utils.create_dirs(dirs)
+    #utils.create_dirs(dirs)
     reference, fastq, flu_flag, de_novo_flag, polio_flag = parse_input()
     if not fastq.endswith("/"):
         fastq = fastq+"/"
@@ -51,15 +51,16 @@ if __name__ == "__main__":
     if polio_flag:
         #filter reads - keep only polio read 
         mutex.acquire()
-        utils.run_mp(5, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
-        pipe.fastq = pipe.fastq + "polio_reads/"
+        #utils.run_mp(5, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
+        #pipe.filter_not_polio(pipe.r1r2_list[0]) #for debugging
+        #pipe.fastq = pipe.fastq + "polio_reads/"
         mutex.release()
         
         mutex.acquire()
-        utils.run_mp(5, pipe.run_spades, pipe.r1r2_list)
+        #utils.run_mp(5, pipe.run_spades, pipe.r1r2_list)
         mutex.release()
         #pipe.run_spades(pipe.r1r2_list[0]) #for debugging
-        pipe.index_refs()
+
         
     #mapping multiprocessing
     mutex.acquire()

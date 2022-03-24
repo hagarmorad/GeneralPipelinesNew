@@ -16,7 +16,7 @@ import utils
 #alignment conmmands
 INDEX = "bwa index %(reference)s"
 BWM_MEM = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b - > %(output_path)s%(sample)s.bam"
-MAPPED_BAM = "samtools view -@ 32 -b -F 260 %(output_path)s%(sample)s.bam > %(output_path)s%(sample)s.mapped.bam"
+MAPPED_BAM = "samtools view -@ 32 -b -F 4 %(output_path)s%(sample)s.bam > %(output_path)s%(sample)s.mapped.bam"
 SORT = "samtools sort -@ 32 %(output_path)s%(sample)s.mapped.bam -o %(output_path)s%(sample)s.mapped.sorted.bam"
 DEPTH = "samtools depth -a %(bam_path)s%(bam_file)s > %(depth_path)s%(sample)s.txt"
 CNS = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 1 -p %(cns_path)s%(sample)s.fa"
@@ -70,15 +70,15 @@ class general_pipe():
         f = open(output_report+".csv", 'w')
         writer = csv.writer(f)
     
-        writer.writerow(['sample','mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%','mean_depth','max_depth','min_depth'])
+        writer.writerow(['sample', 'reference', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%','mean_depth','max_depth','min_depth'])
     
         for bam_file in os.listdir(bam_path):
-                if "sorted" in bam_file:
+                if "sorted" in bam_file and "bai" not in bam_file:
                     subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file), shell=True) 
                     total_reads = pysam.AlignmentFile(bam_path+bam_file).count(until_eof=True)
                     coverage_stats = pysam.coverage(bam_path+bam_file).split("\t")
                     mapped_reads = int(coverage_stats[11])
-                    mapped_percentage = round(mapped_reads/total_reads*100,4)
+                    mapped_percentage = round(mapped_reads/total_reads*100,4) if total_reads else ''
                     cov_bases =  int(coverage_stats[12])
                     coverage = float(coverage_stats[13])
             
@@ -86,15 +86,18 @@ class general_pipe():
                     sample = bam_file.split(".mapped")[0] + bam_file.split(".sorted")[1].split(".bam")[0]
                     depths = [int(x.split('\t')[2]) for x in open(depth_path+sample+".txt").readlines()]
                     depths = [i for i in depths if i != 0]
-                    mean_depth = str(round(mean(depths),3))
-                    min_depth = min(depths)
-                    max_depth = max(depths)
+                    mean_depth = str(round(mean(depths),3)) if depths else ''
+                    min_depth = min(depths) if depths else ''
+                    max_depth = max(depths) if depths else ''
                     
                     breadth_cns5 = len([i for i in depths if i > 5])
                     genome_size = sum(1 for line in open(depth_path+sample+".txt"))
-                    coverage_cns5 = round(breadth_cns5 / genome_size * 100,3)
-            
-                    writer.writerow([sample, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, mean_depth, max_depth, min_depth])
+                    coverage_cns5 = round(breadth_cns5 / genome_size * 100,3)  if genome_size else ''
+                    
+                    #f=open("fasta/selected_references/"+sample+".fasta")
+                    #reference = f.readline().split("man ")[1].split("strain")[0]
+                    #f.close()
+                    writer.writerow([sample, reference, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, mean_depth, max_depth, min_depth])
                 
         f.close()
 
