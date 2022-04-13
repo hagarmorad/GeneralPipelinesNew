@@ -38,20 +38,23 @@ class de_novo(general_pipe):
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]
-        utils.create_dirs(["spades/spades_results/"+sample])
+        utils.create_dirs(["spades/spades_results/"+sample])#temp comment
         #subprocess.call(RUN_SPADES % dict( r1=self.fastq + r1, r2=self.fastq + r2, output_path="spades/spades_results/"+ sample + "/"), shell=True)
         subprocess.call(RUN_SPADES % dict( r1=self.fastq + r1, output_path="spades/spades_results/"+ sample + "/"), shell=True)
     #run blastn on spades rna trascript.fasta  
     def run_blast(self):
-        utils.create_dirs(["blast"])
+        utils.create_dirs(["blast"])#temp comment
         for spades_result in os.listdir("spades/spades_results/"):
             subprocess.call(RUN_BLAST % dict(db=self.reference, query="spades/spades_results/" + spades_result + "/transcripts.fasta", output_file="blast/" + spades_result + ".txt"), shell=True)
+#            if "blast/" + spades_result + ".txt" not in os.listdir("blast/"):fix this line
+#                f = open("blast/" + spades_result + ".txt",'w')
+#                f.close()
             dataframe = pd.read_csv("blast/" + spades_result + ".txt",delimiter="\t", names=["query_sequence", "query_seq_id", "subject_title" ,"query_length" ,"query_coverage", "raw_score", "bit_score"])
             dataframe.to_csv("blast/" + spades_result + ".csv", encoding='utf-8', index=False)
-            #os.remove("blast/" + spades_result + ".txt")
+            #os.remove("blast/" + spades_result + ".txt") 
     #load blast output and choose the reference of the longest highest score contig. 
     def choose_reference_filter_contigs(self):
-        utils.create_dirs(["fasta/","fasta/selected_contigs","fasta/all_contigs","fasta/selected_references"])
+        utils.create_dirs(["fasta/","fasta/selected_contigs","fasta/all_contigs","fasta/selected_references","BAM/fastq_based/","BAM/contig_based/"])
         sample_ref = {} #dict of the selected reference for each sample
         for sample, r1, r2 in self.r1r2_list:   
            if os.stat('blast/'+sample+'.txt').st_size == 0:
@@ -93,6 +96,7 @@ class de_novo(general_pipe):
     #map each sample to its reference
     def bam(self,sample_r1_r2):
         #align selected contig 
+        
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]

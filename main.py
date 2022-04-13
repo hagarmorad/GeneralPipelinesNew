@@ -30,7 +30,7 @@ if __name__ == "__main__":
     
     mutex = Lock()
  
-    #utils.create_dirs(dirs)
+    utils.create_dirs(dirs)
     reference, fastq, flu_flag, de_novo_flag, polio_flag = parse_input()
     if not fastq.endswith("/"):
         fastq = fastq+"/"
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     elif de_novo_flag:
         pipe = de_novo(reference,fastq)
         #run spades multiprocessing
-        utils.run_mp(5, pipe.run_spades, pipe.r1r2_list)
+        utils.run_mp(3, pipe.run_spades, pipe.r1r2_list)
         pipe.run_blast()
         sample_ref = pipe.choose_reference_filter_contigs()
         pipe.import_references(sample_ref)
@@ -49,24 +49,19 @@ if __name__ == "__main__":
         pipe = general_pipe(reference,fastq)
 
     if polio_flag:
-        #filter reads - keep only polio read 
+        #filterreads - keep only polio read 
         mutex.acquire()
-        #utils.run_mp(5, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
+        #utils.run_mp(1, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
         #pipe.filter_not_polio(pipe.r1r2_list[0]) #for debugging
         #pipe.fastq = pipe.fastq + "polio_reads/"
         mutex.release()
         
-        mutex.acquire()
-        #utils.run_mp(5, pipe.run_spades, pipe.r1r2_list)
-        mutex.release()
-        #pipe.run_spades(pipe.r1r2_list[0]) #for debugging
 
-        
     #mapping multiprocessing
     mutex.acquire()
-    utils.run_mp(5, pipe.bam, pipe.r1r2_list)
+    utils.run_mp(2, pipe.bam, pipe.r1r2_list)#temp comment
     mutex.release()
-    #pipe.bam(pipe.r1r2_list[0]) #for debuging
+#   #pipe.bam(pipe.r1r2_list[0]) #for debuging
     
     if polio_flag:
         pipe.map_bam()
