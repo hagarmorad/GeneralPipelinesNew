@@ -13,11 +13,7 @@ import multiprocessing as mp
 from Bio import SeqIO
 
 #mafft commands
-FIX = "eval \"$(conda shell.bash hook)\""
-NEXT_ACT = "conda activate --stack nextstrain"
-AUGUR = "  augur align --sequences alignment/all_not_aligned.fasta --reference-sequence %(reference)s --output alignment/all_aligned.fasta"
-MAFFT = "mafft %(not_aligned)s > %(aligned)s"
-DEACT ="conda deactivate"
+MAFFT = "./MAFFT.sh %(not_aligned)s %(reference)s %(aligned)s"
 #split bam file
 SPLIT = "bamtools split -in %(bam)s -reference"
 
@@ -61,11 +57,8 @@ def change_header(dir):
         
 
 def mafft(reference,not_aligned, aligned):
-#    subprocess.call(FIX, shell=True)  
-#    subprocess.call(NEXT_ACT, shell=True)   
-#    subprocess.call(AUGUR % dict(reference=reference), shell=True)
-#    subprocess.call(DEACT, shell=True)
-    subprocess.call(MAFFT % dict(not_aligned=not_aligned, aligned=aligned), shell=True)
+    subprocess.call(MAFFT % dict(not_aligned=not_aligned, reference=reference, aligned=aligned), shell=True)
+
 
 def get_sequences(alignment_file):
     sequences = {}

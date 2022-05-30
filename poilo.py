@@ -8,14 +8,16 @@ Created on Wed Jan 26 11:16:08 2022
 
 
 RUN_SPADES = "spades --12 %(sample)s -o %(output_path)s --rna"
-FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b -f 2 - | samtools fastq > %(output_path)s%(sample)s.fastq"
-#BWM_MEM_FASTQ = "bwa mem -v1 -t 32 -B 10000 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #strict mapping (high penalty)
-#BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
-#BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #no filters
-BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam"
+FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b -f 2 > %(output_path)s%(sample)s.bam"
+BAM2FQ = "samtools bam2fq -0n %(file)s.bam > %(file)s.fastq"
+BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
+#old mappings:###
+    #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 -B 10000 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #strict mapping (high penalty)
+    #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #no filters
+    #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam"
+#################
 import utils
 from generalPipeline import  MAPPED_BAM, SORT, general_pipe
-from deNovo import de_novo
 import subprocess
 import os
 from utils import SPLIT
@@ -31,7 +33,9 @@ class polio(general_pipe):
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]       
         subprocess.call(FILTER % dict( reference=self.reference, r1=self.fastq + r1, r2=self.fastq + r2, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
-        print(1)
+        subprocess.call(BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
+        os.remove(self.fastq+"polio_reads/" + sample + ".bam")
+        print("finished filtering")
     
               
     #override
@@ -40,8 +44,8 @@ class polio(general_pipe):
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2] 
-        #subprocess.call(BWM_MEM_FASTQ % dict(reference=self.reference ,fastq=self.fastq+sample+".fastq", out_file=sample, output_path="BAM/"), shell=True) #map to reference
-        subprocess.call(BWM_MEM_FASTQ % dict(reference=self.reference ,r1=self.fastq+r1, r2=self.fastq+r2, out_file=sample, output_path="BAM/"), shell=True) #map to reference
+        subprocess.call(BWM_MEM_FASTQ % dict(reference=self.reference ,fastq=self.fastq+sample+".fastq", out_file=sample, output_path="BAM/"), shell=True) #map to reference
+        #subprocess.call(BWM_MEM_FASTQ % dict(reference=self.reference ,r1=self.fastq+r1, r2=self.fastq+r2, out_file=sample, output_path="BAM/"), shell=True) #map to reference
         subprocess.call(SPLIT % dict(bam="BAM/"+sample+".bam"), shell=True)
         os.remove("BAM/"+sample+".bam")
 

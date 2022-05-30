@@ -10,15 +10,15 @@ import subprocess
 import utils
 import sys
 
-fastq_path = "/mnt/data/projects/Merav/VDPV3_2022/fastq/raw/"
-output_path = "/home/hagar/polio_tests/filter_s1_map_to_A20/filtered_reads/"
-polio_refs = "/home/hagar/refs/polio/Sabin1_AY184219.1.fasta"
-#fastq_path = sys.argv[1]
-#output_path = sys.argv[2]
+#fastq_path = "/mnt/data/projects/Merav/VDPV3_2022/fastq/raw/"
+#output_path = "/home/hagar/polio_tests/filter_s1_map_to_A20/filtered_reads/"
+polio_refs = "/home/hagar/refs/polio/polio.fasta"
+fastq_path = sys.argv[1]
+output_path = sys.argv[2]
 
 FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b -F 2 - | samtools fastq > %(output_path)s%(sample)s.fastq"
-FILTER2 = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s| samtools view -@ 32 -b -f 4 -f 8 - | samtools fastq > %(output_path)s%(sample)s.fastq"
-FILTER3 = "bwa mem -v1 -t 32 %(reference)s %(r1)s | samtools view -@ 32 -b -f 4 -  | samtools fastq > %(output_path)s%(sample)s.fastq"
+FILTER2 = "bwa mem  -v1 -t 32 %(reference)s %(r1)s %(r2)s| samtools view -@ 32 -b -f 4 -f 8 - | samtools bam2fq > %(output_path)s%(sample)s.fastq"
+FILTER3 = "bwa mem -v1 -t 32 %(reference)s %(r1)s | samtools view -@ 32 -b -f 4 -  | samtools bam2fq > %(output_path)s%(sample)s.fastq"
 RUN_SPADES = "spades --12 %(fastq)s -o %(output_path)s --rna"
 def filter_with_singeltons():
     for fastq in os.listdir(fastq_path):
@@ -53,6 +53,6 @@ for fastq in os.listdir(fastq_path):
     if "R1" in fastq:
         fastq_list.append(fastq)
 #utils.run_mp(5,run_spades,fastq_list)
-utils.run_mp(5,filter_unmapped_paired,fastq_list)
+utils.run_mp(2,filter_unmapped_paired,fastq_list)
 #filter_with_singeltons()
 #filter_only_singletons()
