@@ -13,6 +13,8 @@ from deNovo import de_novo
 from poilo import polio
 import utils
 from threading import Lock
+import parse_gb_file
+import signatures
 
 dirs=['BAM','QC','CNS','CNS_5','alignment','QC/depth']
 
@@ -25,16 +27,17 @@ def parse_input():
         parser.add_argument('-d', '--de_novo', action='store_true', help="de-novo analysis") #store_true will store the argument as true
         parser.add_argument('--polio', action='store_true', help="PolioVirus analysis") #store_true will store the argument as true
         parser.add_argument('-c', '--cmv', action='store_true', help="cetomegalovirus (human herpesvirus 5) analysis") #store_true will store the argument as true
+        parser.add_argument('-gb','--gb_file' ,help='insert gb file and get reference regions report')
+        parser.add_argument('-m','--mutations_table' , action='store_true',help='mutations table reprort. gb file flag is mandatory')
         args = parser.parse_args()
-        return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, int(args.process)
+        return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, int(args.process), args.gb_file, args.mutations_table
         
 if __name__ == "__main__":
     
         
     mutex = Lock()
- 
     utils.create_dirs(dirs)
-    reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, process = parse_input()
+    reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, process, gb_file, mutations_flag = parse_input()
     if not fastq.endswith("/"):
         fastq = fastq+"/"
     if flu_flag:
@@ -79,8 +82,16 @@ if __name__ == "__main__":
         pipe.concat_samples()
         pipe.concat_segments()
     
-    if flu_flag or cmv_flag: #need to fix fl
+    if flu_flag or cmv_flag or gb_file: #need to fix flu
         utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
-        
+
+            
     pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
     
+    if gb_file:
+        parse_gb_file.parse(gb_file)
+        
+    if mutations_flag:
+        utils.create_dirs(["reports"])
+        signatures.run("alignment/all_aligned.fasta", gb_file.replace(".gb", "_regions.csv"), "reports/mutations.csv")
+        
