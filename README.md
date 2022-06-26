@@ -1,4 +1,8 @@
 # Universal Pipeline for Viruses
+## Configuration:
+* Clone this repository.
+* In order to install all dependencies using conda, run: \
+    `conda env create -f <your/upv/path>/env/conda.yml`
 ## Usage:
  `python3 main.py [-h] | [-r REFSEQ_PATH] [-i FASTQ_PATH] [options] `
 #### -i /input/path : provide input path  (required)
