@@ -1,6 +1,6 @@
 import pandas as pd
 
-def parse(file, ds=False):
+def parse(file, ds=True):
     '''
     This script generates a region.csv file.
     

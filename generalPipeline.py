@@ -38,9 +38,10 @@ class general_pipe():
         self.reference = reference
         self.fastq = fastq
         self.r1r2_list = utils.get_r1r2_list(self.fastq)
+        subprocess.call(INDEX % dict(reference=self.reference), shell=True)
+
 
     def bam(self, sample_r1_r2):
-        subprocess.call(INDEX % dict(reference=self.reference), shell=True)
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]            

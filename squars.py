@@ -12,15 +12,9 @@ import numpy as np
 from utils import get_sequences
 import seaborn as sns
 import matplotlib.pyplot  as plt
-
+from utils import hamming_distance
 #given sequences return a df of differences- 1=>different 0=identical
-def hamming_distance(seq1, seq2):
- df = pd.DataFrame()
- df["seq1"] = pd.Series(seq1)
- df["seq2"] = pd.Series(seq2)
- df['difference'] = np.where((df["seq1"] == df["seq2"]) | (df["seq1"] == "N") | (df["seq2"] == "N") | (df["seq1"] == "-") | (df["seq2"] == "-"), 0, 1)
- 
- return (df["difference"].sum())
+
 
 def dist_mat(sequences):
     distmat= pd.DataFrame(columns=sequences.keys(), index=sequences.keys())
