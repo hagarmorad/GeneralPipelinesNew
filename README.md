@@ -4,6 +4,7 @@
 * In order to install all dependencies using conda, run: \
     `conda env create -f <your/upv/path>/env/conda.yml`
 ## Usage:
+ `conda activate upv`
  `python3 main.py [-h] | [-r REFSEQ_PATH] [-i FASTQ_PATH] [options] `
 #### -i /input/path : provide input path  (required)
 `/input/path` - the path to fastq files.
