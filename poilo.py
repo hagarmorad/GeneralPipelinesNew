@@ -9,7 +9,9 @@ Created on Wed Jan 26 11:16:08 2022
 
 RUN_SPADES = "spades --12 %(sample)s -o %(output_path)s --rna"
 FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b -f 2 > %(output_path)s%(sample)s.bam"
+FILTER = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4 > %(output_path)s%(sample)s.bam"
 BAM2FQ = "samtools bam2fq -0n %(file)s.bam > %(file)s.fastq"
+minion_BAM2FQ = "samtools bam2fq %(file)s.bam > %(file)s.fastq"
 BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
 #old mappings:###
     #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 -B 10000 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #strict mapping (high penalty)
@@ -28,12 +30,17 @@ class polio(general_pipe):
         utils.create_dirs([self.fastq+"polio_reads"]) #temp comment
 
     #filter the fastq files to contain only mapped reads 
-    def filter_not_polio(self,sample_r1_r2):
+    #in minion the we dont have r1 and r2. all files should be merged by barcodes before running this code
+    def filter_not_polio(self,sample_r1_r2,minion=1):
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]       
-        subprocess.call(FILTER % dict( reference=self.reference, r1=self.fastq + r1, r2=self.fastq + r2, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
-        subprocess.call(BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
+        if minion:
+            subprocess.call(FILTER % dict( reference=self.reference, fastq=self.fastq + r1, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
+            subprocess.call(minion_BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
+        else:
+            subprocess.call(FILTER % dict( reference=self.reference, r1=self.fastq + r1, r2=self.fastq + r2, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
+            subprocess.call(BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
         os.remove(self.fastq+"polio_reads/" + sample + ".bam")
         print("finished filtering")
     
@@ -41,6 +48,7 @@ class polio(general_pipe):
     #override
     #map each sample to its reference
     def bam(self,sample_r1_r2):
+        
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2] 

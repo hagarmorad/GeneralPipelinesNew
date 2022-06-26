@@ -11,6 +11,8 @@ import subprocess
 import shutil
 import multiprocessing as mp
 from Bio import SeqIO
+import pandas as pd
+import numpy as np
 
 #mafft commands
 MAFFT = "./MAFFT.sh %(not_aligned)s %(reference)s %(aligned)s"
@@ -96,7 +98,16 @@ def run_mp(threads, func, arg):
         pool.map(func,arg)
         pool.close()
         pool.join()
-        
+ 
+def hamming_distance(seq1, seq2):
+ df = pd.DataFrame()
+ df["seq1"] = pd.Series(seq1)
+ df["seq2"] = pd.Series(seq2)
+ df['difference'] = np.where((df["seq1"] == df["seq2"]) | (df["seq1"] == "N") | (df["seq2"] == "N") | (df["seq1"] == "-") | (df["seq2"] == "-"), 0, 1)
+ 
+ return (df["difference"].sum())
+
+
 translate_table = {
     'ATA': 'I', 'ATC': 'I', 'ATT': 'I', 'ATG': 'M',
     'ACA': 'T', 'ACC': 'T', 'ACG': 'T', 'ACT': 'T',
