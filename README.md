@@ -14,13 +14,13 @@ Don't worry about indexing the fasta file, it happens automatically.
 
 #### --gb_file (optional)
 parse a gene bank file. \
-Gene back file can be downloaded from ncbi. \
+Gene bank file can be downloaded from ncbi. \
 The result is a regions file in the same path of the gb file, containing the genes region. \
  `python3 main.py -gb path/to/file.gb`
 
 #### -m |--mutations_table (optional)
 mutations table analysis. \
-Gene back flag is required. \
+Gene bank flag is required. \
 The result is a mutation report file containing the nucleotide mutations and their translation according to the gene regions in the gb file.
  `python3 main.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table`
  
