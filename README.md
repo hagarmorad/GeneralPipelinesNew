@@ -2,7 +2,7 @@
 ## Configuration:
 * Clone this repository.
 * In order to install all dependencies using conda, run: \
-    `conda env create -f <your/upv/path>/env/conda.yml`
+    `conda env create -f <your/upv/path>/env/environment.yml`
 ## Usage:
  `conda activate upv` \
  `python3 upv.py [-h] | [-r REFSEQ_PATH] [-i FASTQ_PATH] [options] `
