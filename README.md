@@ -44,7 +44,7 @@ run de-novo analysis in addition to the regular pipeline. \
 The reference should be a Blast Database. The pipeline will choose a reference by the best match after using Blast.
 The output will be seperated to contig based and fastq based analysis. \
  `python3 main.py  -r path/to/blast_database.fa -i path/to/fastq/location --de_novo `
-In order to generate blast database from a fasta/multi-fasta file you can use the following command: 
+In order to generate blast database from a fasta/multi-fasta file you can use the following command: \
 `makeblastdb -in fasta/file -parse_seqids -title "Viral" -dbtype nucl`
 
 #### --CMV (optional)
