@@ -5,37 +5,37 @@
     `conda env create -f <your/upv/path>/env/conda.yml`
 ## Usage:
  `conda activate upv` \
- `python3 main.py [-h] | [-r REFSEQ_PATH] [-i FASTQ_PATH] [options] `
+ `python3 upv.py [-h] | [-r REFSEQ_PATH] [-i FASTQ_PATH] [options] `
 #### -i /input/path : provide input path  (required)
 `/input/path` - the path to fastq files.
 
 #### -r|--refseq <refseq/path/> : provide refseq path (required)
 Don't worry about indexing the fasta file, it happens automatically.
 
- `python3 main.py -i /input/path -r path/to/ref.fa`
+ `python3 upv.py -i /input/path -r path/to/ref.fa`
 
 #### -p|--process [INT] (optional)
 Number of processes to run in parallel. \
 Note that only some of the pipeline will run in multiprocessing. \
 Be careful not to run too many processes on your CPU. \
- `python3 main.py -i /input/path -r path/to/ref.fa -p 3`
+ `python3 upv.py -i /input/path -r path/to/ref.fa -p 3`
 
 #### --gb_file (optional)
 Parse a gene bank file. \
 Gene bank file can be downloaded from ncbi. \
 The result is a regions file in the same path of the gb file, containing the genes region. \
- `python3 main.py -gb path/to/file.gb`
+ `python3 upv.py -gb path/to/file.gb`
 
 #### -m |--mutations_table (optional)
 mutations table analysis. \
 Gene bank flag is required. \
 The result is a mutation report file containing the nucleotide mutations and their translation according to the gene regions in the gb file.
- `python3 main.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table`
+ `python3 upv.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table`
  
 #### --mini (optional)
 This flag enables to run a mini version of the pipeline by inserting alignment file as an input . \
 The results are the parsed gb file and the mutations report. \
- `python3 main.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table --mini`
+ `python3 upv.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table --mini`
 
 #### -v|--vcf (optional)
 Generate a variant calling file using gatk4. \
@@ -44,18 +44,18 @@ This step fill the identity column in QC/report.csv file by counting the mutatio
 #### --flu (optional)
 Run the pipeline for influenza viruses. \
 The reference should contain the virus segments seperated by fasta headers. \
- `python3 main.py  -r path/to/influenza_ref.fa -i path/to/fastq/location --flu `
+ `python3 upv.py  -r path/to/influenza_ref.fa -i path/to/fastq/location --flu `
  
 #### --polio (optional)
 Run the pipeline for polio virus. \
 The reference should contain the 3 Sabins seperated by fasta headers. \
- `python3 main.py  -r path/to/polio_refs.fa -i path/to/fastq/location --polio `
+ `python3 upv.py  -r path/to/polio_refs.fa -i path/to/fastq/location --polio `
  
 #### --de_novo (optional)
 Run de-novo analysis in addition to the regular pipeline. \
 The reference should be a Blast Database. The pipeline will choose a reference by the best match after using Blast.
 The output will be seperated to contig based and fastq based analysis. \
- `python3 main.py  -r path/to/blast_database.fa -i path/to/fastq/location --de_novo ` \
+ `python3 upv.py  -r path/to/blast_database.fa -i path/to/fastq/location --de_novo ` \
 In order to generate blast database from a fasta/multi-fasta file you can use the following command: \
 `makeblastdb -in fasta/file -parse_seqids -title "Viral" -dbtype nucl`
 
@@ -63,7 +63,7 @@ In order to generate blast database from a fasta/multi-fasta file you can use th
 Run CMV resistance mutations analysis in addition to the regular pipeline . \
 This part was developed for human Herpes virus 5 reference - NC_006273.2. \
 The output "cmv_resistance.txt" is a report containing the resistance mutations of each sample if exist. \
- `python3 main.py  -r path/to/NC_006273.2.fa -i path/to/fastq/location --CMV `
+ `python3 upv.py  -r path/to/NC_006273.2.fa -i path/to/fastq/location --CMV `
 
  
 ## Main Steps:
