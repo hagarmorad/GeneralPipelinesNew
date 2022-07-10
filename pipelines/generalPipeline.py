@@ -11,7 +11,11 @@ import os
 import pysam
 from statistics import mean
 import csv
-import utils
+from utils import utils
+import pandas as pd
+from math import floor
+from utils.summerize_coverage import summerize_coverage
+
 
 #alignment conmmands
 INDEX = "bwa index %(reference)s"
@@ -24,6 +28,10 @@ CNS = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 1
 #CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 5 -p %(cns5_path)s%(sample)s.fa"
 CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -m 5 -p %(cns5_path)s%(sample)s.fa"
 SAMTOOLS_INDEX = "samtools index -@ 32 %(bam_path)s%(bam_file)s"
+#variants
+VARIANTS = os.path.dirname(__file__)+"/variant_calling.sh %(bam_path)s %(vcf_path)s %(reference)s"
+
+
 #MAFFT commands
 ALL_NOT_ALIGNED =   "cat %(dir)s > alignment/all_not_aligned.fasta"
 
@@ -50,6 +58,26 @@ class general_pipe():
         subprocess.call(MAPPED_BAM % dict(sample=sample, output_path="BAM/"), shell=True) #keep mapped reads
         subprocess.call(SORT % dict(sample=sample, output_path="BAM/"), shell=True)         
     
+    def variant_calling(self, bam_path = "BAM/", vcf_path= "VCF/"):
+        subprocess.call(VARIANTS % dict(bam_path=bam_path, vcf_path=vcf_path, reference=self.reference), shell=True)
+        ref = utils.get_sequences(self.reference)
+        identity_precent={}
+
+        for table in os.listdir(vcf_path):
+            if table.endswith("table"):
+                sample = table.split(".table")[0]
+                vcf_sum = pd.read_csv(vcf_path+table, sep='\t')
+                sample_mut_count = len(vcf_sum) #count the mutation number in the table file
+                if sample_mut_count:
+                    ref_len = len(ref[vcf_sum.at[0,"CHROM"]]) #get the current vcf reference sequence lentgh. i have each virus in seperated VCF file (becuase i splitted the bams)
+                    identity_precent[sample] = floor(100 - (sample_mut_count / ref_len * 100))
+                else: 
+                    identity_precent[sample] = 100
+                    
+        with open(vcf_path +"identity.txt",'w') as f:
+            for key, value in identity_precent.items(): 
+                f.write('%s\t%s\n' % (key, value))
+        
     #find mapping depth and consensus sequence 
     def cns_depth(self, bam_path, depth_path, cns_path, cns5_path):
         for bam_file in os.listdir(bam_path):
@@ -68,13 +96,17 @@ class general_pipe():
         utils.mafft(self.reference)
     
     #write report.csv - mapping analysis
-    def results_report(self, bam_path, depth_path, output_report):
-        
+    #de novo flag was created to generate different output for de novo analysis, used in denovo class and polio class.
+    def results_report(self, bam_path, depth_path, output_report, de_novo=0, vcf=0):
+        if vcf:
+            vcf_path = bam_path.replace("BAM","VCF")
+            identity_table = pd.read_csv(vcf_path+"identity.txt", sep='\t', header=None)
         f = open(output_report+".csv", 'w')
         writer = csv.writer(f)
-    
-        #writer.writerow(['sample', 'reference', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%','mean_depth','max_depth','min_depth'])
-        writer.writerow(['sample', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%','mean_depth','max_depth','min_depth'])
+        if not de_novo:
+            writer.writerow(['sample', 'reference', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%', 'identity','mean_depth','max_depth','min_depth'])
+        else:
+            writer.writerow(['sample', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%', 'identity', 'mean_depth','max_depth','min_depth'])
         for bam_file in os.listdir(bam_path):
                 if "sorted" in bam_file and "bai" not in bam_file:
                     subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file), shell=True) 
@@ -97,11 +129,17 @@ class general_pipe():
                     genome_size = sum(1 for line in open(depth_path+sample+".txt"))
                     coverage_cns5 = round(breadth_cns5 / genome_size * 100,3)  if genome_size else ''
                     
-#                    f=open("fasta/selected_references/"+sample+".fasta")
-#                    reference = f.readline().split("man ")[1].split("strain")[0]
-#                    f.close()
-#                    writer.writerow([sample, reference, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, mean_depth, max_depth, min_depth])
-                    writer.writerow([sample, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, mean_depth, max_depth, min_depth])
+                    identity = identity_table.loc[identity_table[0] == sample, 1].iloc[0] if vcf else ''
+                    
+                    if de_novo:
+                        f=open("fasta/selected_references/"+sample+".fasta")
+                        reference = f.readline().split("man ")[1].split("strain")[0]
+                        f.close()
+                        writer.writerow([sample, reference, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, identity, mean_depth, max_depth, min_depth])
+                    else:
+                        writer.writerow([sample, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, identity, mean_depth, max_depth, min_depth])
                 
         f.close()
+        
+        summerize_coverage(output_report+".csv")
 

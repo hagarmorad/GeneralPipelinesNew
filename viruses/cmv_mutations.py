@@ -1,6 +1,6 @@
 import pandas as pd
 from Bio import SeqIO
-from utils import translate_table
+from utils.utils import translate_table
 
 # read files
 alignment_file = "alignment/all_aligned.fasta"

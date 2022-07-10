@@ -7,7 +7,7 @@ Created on Mon Mar  7 14:26:50 2022
 """
 import os
 import subprocess
-import utils
+from utils import utils
 import sys
 
 #fastq_path = "/mnt/data/projects/Merav/VDPV3_2022/fastq/raw/"

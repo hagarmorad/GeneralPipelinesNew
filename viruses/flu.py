@@ -5,10 +5,10 @@ Created on Mon Jan 10 10:15:00 2022
 
 @author: hagar
 """
-from generalPipeline import general_pipe, ALL_NOT_ALIGNED
+from pipelines.generalPipeline import general_pipe, ALL_NOT_ALIGNED
 import os
 import subprocess
-import utils
+from utils import utils
 
 #bash commands
 SPLIT = "bamtools split -in %(bam)s -reference"

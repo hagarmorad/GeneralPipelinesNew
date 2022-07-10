@@ -8,11 +8,10 @@ Created on Sun Apr 10 14:22:20 2022
 
 import sys
 import pandas as pd
-import numpy as np
-from utils import get_sequences
+from utils.utils import get_sequences, hamming_distance
 import seaborn as sns
 import matplotlib.pyplot  as plt
-from utils import hamming_distance
+
 #given sequences return a df of differences- 1=>different 0=identical
 
 

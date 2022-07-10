@@ -6,9 +6,11 @@ Created on Wed Jun 15 10:03:49 2022
 @author: hagar
 """
 
-from utils import get_sequences
+from utils.utils import get_sequences
 import pandas as pd
-
+'''
+not in use
+'''
 
 fasta = "/mnt/project1/projects/POLIO/VDPV3_2022/fasta/sabin1/all_aligned.fasta"
 seqs = get_sequences(fasta)

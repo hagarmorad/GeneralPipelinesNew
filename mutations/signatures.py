@@ -8,8 +8,8 @@ Created on Wed Apr  6 14:06:34 2022
 from sys import argv
 from math import floor
 import pandas as pd
-from utils import translate_table, get_sequences, mutations_positions
-from format_xl import save_format_xl
+from utils.utils import translate_table, get_sequences, mutations_positions
+from utils.format_xl import save_format_xl
 ambiguous_nucleotides = ["W", "Y", "R", "S", "D","K","M","V","H","B","X"]
 
 """

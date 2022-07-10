@@ -15,7 +15,8 @@ import pandas as pd
 import numpy as np
 
 #mafft commands
-MAFFT = "./MAFFT.sh %(not_aligned)s %(reference)s %(aligned)s"
+MAFFT = os.path.dirname(__file__)+"/MAFFT.sh %(not_aligned)s %(reference)s %(aligned)s"
+RM_SPADES = "find spades -type f ! -name 'transcripts.fasta' -delete"
 #split bam file
 SPLIT = "bamtools split -in %(bam)s -reference"
 
@@ -61,6 +62,8 @@ def change_header(dir):
 def mafft(reference,not_aligned, aligned):
     subprocess.call(MAFFT % dict(not_aligned=not_aligned, reference=reference, aligned=aligned), shell=True)
 
+def rm_spades():
+    subprocess.call(RM_SPADES, shell=True)
 
 def get_sequences(alignment_file):
     sequences = {}

@@ -7,16 +7,15 @@ Created on Mon Jan 10 11:52:43 2022
 """
 
 import argparse
-from generalPipeline import general_pipe
-from flu import flu
-from deNovo import de_novo
-from poilo import polio
-import utils
+from pipelines.generalPipeline import general_pipe
+from viruses.flu import flu
+from pipelines.deNovo import de_novo
+from viruses.polio import polio
+from utils import utils, parse_gb_file
 from threading import Lock
-import parse_gb_file
-import signatures
+from mutations import signatures
 
-dirs=['BAM','QC','CNS','CNS_5','alignment','QC/depth']
+dirs=['BAM','QC','CNS','CNS_5','QC/depth', 'VCF']
 
 def parse_input():
         parser = argparse.ArgumentParser()
@@ -30,15 +29,21 @@ def parse_input():
         parser.add_argument('-gb','--gb_file' ,help='insert gb file and get reference regions report')
         parser.add_argument('-m','--mutations_table' , action='store_true',help='mutations table reprort. gb file flag is mandatory')
         parser.add_argument('--mini' , action='store_true',help='run only mutation analysis. this flag requires --input flag as alignment file.')
+        parser.add_argument('--skip_spades' , action='store_true',help='skip spades analysis used in polio and de novo classes. turn on this flag only if you already run spades once')
+        parser.add_argument('-v','--vcf' , action='store_true',help='generates vcf files using gatk4. fill the identity column in the report file')
         args = parser.parse_args()
-        return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, int(args.process), args.gb_file, args.mutations_table, args.mini
+        return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, \
+                   int(args.process), args.gb_file, args.mutations_table, args.mini, args.skip_spades, args.vcf
         
 if __name__ == "__main__":
     
         
     mutex = Lock()
     
-    reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, process, gb_file, mutations_flag, mini = parse_input()
+    reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, \
+        process, gb_file, mutations_flag, mini, skip_spades, vcf = parse_input()
+    
+    
     if not mini:      
         utils.create_dirs(dirs) 
         if not reference:
@@ -47,29 +52,41 @@ if __name__ == "__main__":
     if fastq and reference and not mini:
         if not fastq.endswith("/"):
             fastq = fastq+"/"
+        
         if flu_flag:
             pipe = flu(reference,fastq)
+        
         elif de_novo_flag:
             pipe = de_novo(reference,fastq) #temp comment
-            #run spades multiprocessing
-            utils.run_mp(process, pipe.run_spades, pipe.r1r2_list)
+            if not skip_spades:
+                #run spades multiprocessing
+                mutex.acquire()
+                utils.run_mp(process, pipe.run_spades, pipe.r1r2_list)
+                mutex.release()
             pipe.run_blast()
             sample_ref = pipe.choose_reference_filter_contigs()
             pipe.import_references(sample_ref)
+        
         elif polio_flag:
             pipe = polio(reference,fastq)
+        
         else:
             pipe = general_pipe(reference,fastq)
         
         
        
         if polio_flag:
-            #filterreads - keep only polio read 
+            #filter reads - keep only polio read 
             mutex.acquire()
             utils.run_mp(process, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
             # pipe.filter_not_polio(pipe.r1r2_list[0]) #for debugging
             pipe.fastq = pipe.fastq + "polio_reads/"
             mutex.release()
+            
+            if not skip_spades:
+                mutex.acquire()
+                utils.run_mp(process, pipe.run_spades, pipe.r1r2_list)
+                mutex.release()
             
     
         #mapping multiprocessing
@@ -84,18 +101,32 @@ if __name__ == "__main__":
         if flu_flag:    
             utils.split_bam("BAM/")
         
-        
+
         pipe.cns_depth("BAM/","QC/depth/","CNS/","CNS_5/") #temp comment
         
         if flu_flag:
             pipe.concat_samples()
             pipe.concat_segments()
         
-        if flu_flag or cmv_flag or gb_file: #need to fix flu
-            utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
+        if vcf:
+            mutex.acquire()
+            if polio_flag or de_novo_flag:
+                pipe.variant_calling("BAM/contig_based/", "VCF/contig_based/")
+                pipe.variant_calling("BAM/fastq_based/", "VCF/fastq_based/")
+            else:    
+                pipe.variant_calling()
+            mutex.release()
+        
+        if vcf:
+            pipe.results_report("BAM/", "QC/depth/", 'QC/report', vcf=1) #temp comment
+        else:    
+            pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
+        
+    if flu_flag or cmv_flag or gb_file: #need to fix flu - im not sure this aligner fits
+        utils.create_dirs(['alignment'])
+        utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
     
                 
-        pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
         
     if gb_file:
         parse_gb_file.parse(gb_file)

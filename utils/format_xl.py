@@ -16,7 +16,7 @@ def save_format_xl(df,num_samples):
         if row["R/S"] == "S":
             continue
         aa = row["aa_group"].split(",")
-        if not aa[0].split("(")[0].strip() == aa[0].split("(")[1].strip():
+        if not aa[0].split("(")[0].strip() == aa[1].split("(")[0].strip():
             df.at[index,'group_change']=1
     
             
