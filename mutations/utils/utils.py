@@ -20,9 +20,6 @@ RM_SPADES = "find spades -type f ! -name 'transcripts.fasta' -delete"
 #split bam file
 SPLIT = "bamtools split -in %(bam)s -reference"
 
-
-ambiguous_nucleotides = ["W", "Y", "R", "S", "D","K","M","V","H","B","X"]
-
 #return list of touple (R1,R2) file names
 def get_r1r2_list(fastq_path):
     r1r2_list = []
@@ -74,7 +71,7 @@ def get_sequences(alignment_file):
     for sample, record in alignment.items():
         sequences[sample] = str(record.seq).upper()
 
-        sequences[sample.split("-")[0]] = sequences.pop(sample)
+        #sequences[sample.split("-")[0]] = sequences.pop(sample)
 
     return sequences
 
@@ -92,8 +89,6 @@ def mutations_positions(sequences, no_n = 1):
             if not temp:
                 temp = record[pos]
             if no_n and record[pos] in ["N"]:
-                break
-            if record[pos] in ambiguous_nucleotides:
                 break
             if not temp == record[pos] :
                 mutations_positons.append(pos)

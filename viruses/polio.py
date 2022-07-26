@@ -4,6 +4,9 @@
 Created on Wed Jan 26 11:16:08 2022
 
 @author: hagar
+
+Additional analysis for polio data.
+
 """
 
 
@@ -12,7 +15,8 @@ FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b
 min_FILTER = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4 > %(output_path)s%(sample)s.bam"
 BAM2FQ = "samtools bam2fq -0n %(file)s.bam > %(file)s.fastq"
 minion_BAM2FQ = "samtools bam2fq %(file)s.bam > %(file)s.fastq"
-BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
+#BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
+BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b > %(output_path)s%(out_file)s.bam" #filter out common reads
 BWM_MEM_CONTIGS = "bwa mem -v1 -t 32  %(reference)s %(sample_fasta)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam"
 #old mappings:###
     #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 -B 10000 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #strict mapping (high penalty)
@@ -24,21 +28,39 @@ from pipelines.generalPipeline import  MAPPED_BAM, SORT, general_pipe
 import subprocess
 import os
 from utils.utils import SPLIT
+from utils.summerize_coverage import summerize_coverage
 
 class polio(general_pipe):
     def __init__(self, reference, fastq):
         super().__init__(reference, fastq) 
-        utils.create_dirs([self.fastq+"polio_reads","BAM/fastq_based", "BAM/contig_based", "VCF/fastq_based", "VCF/contig_based"]) #temp comment
+        utils.create_dirs([self.fastq+"polio_reads","BAM/fastq_based", "BAM/contig_based"]) #temp comment
 
     #filter the fastq files to contain only mapped reads 
     #in minion the we dont have r1 and r2. all files should be merged by barcodes before running this code
-    def filter_not_polio(self,sample_r1_r2,minion=0):
+    #TODO: implement minion
+
+    def filter_not_polio(self,sample_r1_r2,minion=False):
+        '''
+        filter outs reads that are not mapped to polio.
+        
+        Parameters
+        ----------
+        sample_r1_r2 : list of lists
+            [sample, r1 fastq path, r2 fastq path].
+        minion : bool, optional
+            minion analysis. The default is False.
+
+        Returns
+        -------
+        None.
+
+        '''
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]       
         if minion:
-            subprocess.call(min_FILTER % dict( reference=self.reference, fastq=self.fastq + r1, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
-            subprocess.call(minion_BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
+            subprocess.call(FILTER % dict( reference=self.reference, fastq=self.fastq + r1, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
+            subprocess.call(BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
         else:
             subprocess.call(FILTER % dict( reference=self.reference, r1=self.fastq + r1, r2=self.fastq + r2, output_path=self.fastq+"polio_reads/", sample=sample), shell=True)
             subprocess.call(BAM2FQ % dict(file=self.fastq+"polio_reads/" + sample), shell=True)
@@ -84,21 +106,21 @@ class polio(general_pipe):
        
     #override TODO - tests
     def variant_calling(self, bam_path, vcf_path):
+        utils.create_dirs(["VCF/fastq_based", "VCF/contig_based"])
         super().variant_calling(bam_path = "BAM/contig_based/", vcf_path= "VCF/contig_based/")
         super().variant_calling(bam_path = "BAM/fastq_based/", vcf_path= "VCF/fastq_based/")
         
     #override
     #write report twice (contigs based and fastq based)
-    def results_report(self, bam_path, depth_path, output_report, de_novo=0, vcf=0):
+    def results_report(self, bam_path, depth_path, output_report, vcf=0):
         contig_dir = "contig_based/"
         fastq_dir = "fastq_based/"        
-        super().results_report(bam_path+contig_dir, depth_path+contig_dir, output_report+"_contig_based",1)
+        super().results_report(bam_path+contig_dir, depth_path+contig_dir, output_report+"_contig_based") # TODO - fix de novo report
         super().results_report(bam_path+fastq_dir, depth_path+fastq_dir, output_report+"_fastq_based")
         
-     
-        
-        
-        
+        summerize_coverage(output_report+"_fastq_based.csv")
+        summerize_coverage(output_report+"_contig_based.csv")
+
         
         
         

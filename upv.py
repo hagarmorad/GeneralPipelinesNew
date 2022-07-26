@@ -15,7 +15,7 @@ from utils import utils, parse_gb_file
 from threading import Lock
 from mutations import signatures
 
-dirs=['BAM','QC','CNS','CNS_5','QC/depth', 'VCF']
+dirs=['BAM','QC','CNS','CNS_5','QC/depth']
 
 def parse_input():
         parser = argparse.ArgumentParser()
@@ -37,12 +37,11 @@ def parse_input():
         
 if __name__ == "__main__":
     
-        
+    DEBUG = False
     mutex = Lock()
     
     reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, \
         process, gb_file, mutations_flag, mini, skip_spades, vcf = parse_input()
-    
     
     if not mini:      
         utils.create_dirs(dirs) 
@@ -78,11 +77,11 @@ if __name__ == "__main__":
         if polio_flag:
             #filter reads - keep only polio read 
             mutex.acquire()
-            utils.run_mp(process, pipe.filter_not_polio, pipe.r1r2_list) #temp comment
-            # pipe.filter_not_polio(pipe.r1r2_list[0]) #for debugging
+            utils.run_mp(process, pipe.filter_not_polio, pipe.r1r2_list) if not DEBUG else pipe.filter_not_polio(pipe.r1r2_list[0])
             pipe.fastq = pipe.fastq + "polio_reads/"
             mutex.release()
             
+            #run spades
             if not skip_spades:
                 mutex.acquire()
                 utils.run_mp(process, pipe.run_spades, pipe.r1r2_list)
@@ -91,9 +90,8 @@ if __name__ == "__main__":
     
         #mapping multiprocessing
         mutex.acquire()
-        utils.run_mp(process, pipe.bam, pipe.r1r2_list)#temp comment
+        utils.run_mp(process, pipe.bam, pipe.r1r2_list) if not DEBUG else pipe.bam(pipe.r1r2_list[0])
         mutex.release()
-        # pipe.bam(pipe.r1r2_list[0]) #for debuging
         
         if polio_flag:
             pipe.map_bam()
@@ -109,6 +107,7 @@ if __name__ == "__main__":
             pipe.concat_segments()
         
         if vcf:
+            utils.create_dirs(["VCF"])
             mutex.acquire()
             if polio_flag or de_novo_flag:
                 pipe.variant_calling("BAM/contig_based/", "VCF/contig_based/")
@@ -116,13 +115,12 @@ if __name__ == "__main__":
             else:    
                 pipe.variant_calling()
             mutex.release()
-        
-        if vcf:
             pipe.results_report("BAM/", "QC/depth/", 'QC/report', vcf=1) #temp comment
+            
         else:    
             pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
         
-    if flu_flag or cmv_flag or gb_file: #need to fix flu - im not sure this aligner fits
+    if flu_flag or cmv_flag or gb_file and not mini:  # TODO - fix flu - im not sure this aligner fits
         utils.create_dirs(['alignment'])
         utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
     

@@ -126,7 +126,7 @@ class de_novo(general_pipe):
     
     #override
     #write report twice (contigs based and fastq based)
-    def results_report(self, bam_path, depth_path, output_report, de_novo=0, vcf=0):
+    def results_report(self, bam_path, depth_path, output_report, vcf=0):
         contig_dir = "contig_based/"
         fastq_dir = "fastq_based/"        
         super().results_report(bam_path+contig_dir, depth_path+contig_dir, output_report+"_contig_based")

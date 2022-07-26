@@ -4,6 +4,8 @@
 Created on Thu Jan  6 11:37:02 2022
 
 @author: hagar
+
+General pipeline is the base class of the upv pipeline.
 """
 
 import subprocess
@@ -14,7 +16,6 @@ import csv
 from utils import utils
 import pandas as pd
 from math import floor
-from utils.summerize_coverage import summerize_coverage
 
 
 #alignment conmmands
@@ -42,6 +43,7 @@ BREADTH_CNS5 = "$(cut -f3 QC/depth/%(sample)s.txt | awk '$1>5{c++} END{print c+0
             
 class general_pipe():
     
+    
     def __init__(self, reference, fastq):
         self.reference = reference
         self.fastq = fastq
@@ -50,6 +52,17 @@ class general_pipe():
 
 
     def bam(self, sample_r1_r2):
+        '''
+        generate bam file from paired-end fastq (R1,R2).
+        generate filtered file with mapped reads.
+        generate sorted file
+        
+        Parameters
+        ----------
+        sample_r1_r2 : list of lists
+            [sample, r1 fastq path, r2 fastq path].
+
+        '''
         sample = sample_r1_r2[0]
         r1= sample_r1_r2[1]
         r2 = sample_r1_r2[2]            
@@ -59,6 +72,20 @@ class general_pipe():
         subprocess.call(SORT % dict(sample=sample, output_path="BAM/"), shell=True)         
     
     def variant_calling(self, bam_path = "BAM/", vcf_path= "VCF/"):
+        '''
+        use GATK to generate vcf file. 
+        summerize the mutations to a table using gatks parser.
+        write identity.txt file that contains calculations of the identity precent calculated by counting the mutations.
+        for now - this function is used only to calculate the identity between the sample to the reference seq.
+
+        Parameters
+        ----------
+        bam_path : str, optional
+            The default is "BAM/".
+        vcf_path : str, optional
+            The default is "VCF/".
+
+        '''
         subprocess.call(VARIANTS % dict(bam_path=bam_path, vcf_path=vcf_path, reference=self.reference), shell=True)
         ref = utils.get_sequences(self.reference)
         identity_precent={}
@@ -80,6 +107,9 @@ class general_pipe():
         
     #find mapping depth and consensus sequence 
     def cns_depth(self, bam_path, depth_path, cns_path, cns5_path):
+        '''
+        Generate consensus sequences and calculate aligning depths from a bam file.
+        '''
         for bam_file in os.listdir(bam_path):
             if "sorted" in bam_file and "bai" not in bam_file:
                 sample = bam_file.split(".mapped")[0] + bam_file.split(".sorted")[1].split(".bam")[0]
@@ -92,21 +122,24 @@ class general_pipe():
                 os.remove(cns5_path+sample+".qual.txt")
 
     def mafft(self):
+        '''
+        multi-fasta align.
+        cat all consensus fasta sequences and run MAFFT. the implementation of MAFFT is in utils.
+
+        '''
         subprocess.call(ALL_NOT_ALIGNED % dict(dir="CNS_5/*"), shell=True)
         utils.mafft(self.reference)
     
     #write report.csv - mapping analysis
     #de novo flag was created to generate different output for de novo analysis, used in denovo class and polio class.
-    def results_report(self, bam_path, depth_path, output_report, de_novo=0, vcf=0):
+    def results_report(self, bam_path, depth_path, output_report, vcf=0):
         if vcf:
             vcf_path = bam_path.replace("BAM","VCF")
             identity_table = pd.read_csv(vcf_path+"identity.txt", sep='\t', header=None)
         f = open(output_report+".csv", 'w')
         writer = csv.writer(f)
-        if not de_novo:
-            writer.writerow(['sample', 'reference', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%', 'identity','mean_depth','max_depth','min_depth'])
-        else:
-            writer.writerow(['sample', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%', 'identity', 'mean_depth','max_depth','min_depth'])
+        writer.writerow(['sample', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%','coverage_CNS_5%', 'identity', 'mean_depth','max_depth','min_depth'])
+        
         for bam_file in os.listdir(bam_path):
                 if "sorted" in bam_file and "bai" not in bam_file:
                     subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file), shell=True) 
@@ -131,15 +164,42 @@ class general_pipe():
                     
                     identity = identity_table.loc[identity_table[0] == sample, 1].iloc[0] if vcf else ''
                     
-                    if de_novo:
+                    writer.writerow([sample, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, identity, mean_depth, max_depth, min_depth])
+                
+        f.close()
+        
+        
+        def results_report_de_novo(self, bam_path, depth_path, output_report, vcf=0):
+            if vcf:
+                vcf_path = bam_path.replace("BAM","VCF")
+                identity_table = pd.read_csv(vcf_path+"identity.txt", sep='\t', header=None)
+            f = open(output_report+".csv", 'w')
+            writer = csv.writer(f)
+            writer.writerow(['sample', 'reference', 'mapped%','mapped_reads','total_reads','cov_bases','coverage%', 'identity','mean_depth','max_depth','min_depth'])
+            for bam_file in os.listdir(bam_path):
+                    if "sorted" in bam_file and "bai" not in bam_file:
+                        subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file), shell=True) 
+                        total_reads = pysam.AlignmentFile(bam_path+bam_file.split(".mapped")[0]+".bam").count(until_eof=True) #need to fix 
+                        coverage_stats = pysam.coverage(bam_path+bam_file).split("\t")
+                        mapped_reads = int(coverage_stats[11])
+                        mapped_percentage = round(mapped_reads/total_reads*100,4) if total_reads else ''
+                        cov_bases =  int(coverage_stats[12])
+                        coverage = float(coverage_stats[13])
+                
+                        #depth 
+                        sample = bam_file.split(".mapped")[0] + bam_file.split(".sorted")[1].split(".bam")[0]
+                        depths = [int(x.split('\t')[2]) for x in open(depth_path+sample+".txt").readlines()]
+                        depths = [i for i in depths if i != 0]
+                        mean_depth = str(round(mean(depths),3)) if depths else ''
+                        min_depth = min(depths) if depths else ''
+                        max_depth = max(depths) if depths else ''
+                        
+                        identity = identity_table.loc[identity_table[0] == sample, 1].iloc[0] if vcf else ''
+                        
                         f=open("fasta/selected_references/"+sample+".fasta")
                         reference = f.readline().split("man ")[1].split("strain")[0]
                         f.close()
                         writer.writerow([sample, reference, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, identity, mean_depth, max_depth, min_depth])
-                    else:
-                        writer.writerow([sample, mapped_percentage, mapped_reads, total_reads, cov_bases, coverage, coverage_cns5, identity, mean_depth, max_depth, min_depth])
-                
-        f.close()
-        
-        summerize_coverage(output_report+".csv")
-
+                        
+                    
+            f.close()
