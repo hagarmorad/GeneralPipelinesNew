@@ -20,15 +20,15 @@ from math import floor
 
 #alignment conmmands
 INDEX = "bwa index %(reference)s"
-#BWM_MEM = "bwa mem -v1 -t 32 %(reference)s %(r1)s | samtools view -@ 32 -b - > %(output_path)s%(sample)s.bam"
-BWM_MEM = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b - > %(output_path)s%(sample)s.bam"
-MAPPED_BAM = "samtools view -@ 32 -b -F 4 %(output_path)s%(sample)s.bam > %(output_path)s%(sample)s.mapped.bam"
-SORT = "samtools sort -@ 32 %(output_path)s%(sample)s.mapped.bam -o %(output_path)s%(sample)s.mapped.sorted.bam"
+#BWM_MEM = "bwa mem -v1 -t 16 %(reference)s %(r1)s | samtools view -@ 16 -b - > %(output_path)s%(sample)s.bam"
+BWM_MEM = "bwa mem -v1 -t 16 %(reference)s %(r1)s %(r2)s | samtools view -@ 16 -b - > %(output_path)s%(sample)s.bam"
+MAPPED_BAM = "samtools view -@ 16 -b -F 4 %(output_path)s%(sample)s.bam > %(output_path)s%(sample)s.mapped.bam"
+SORT = "samtools sort -@ 14 %(output_path)s%(sample)s.mapped.bam -o %(output_path)s%(sample)s.mapped.sorted.bam"
 DEPTH = "samtools depth -a %(bam_path)s%(bam_file)s > %(depth_path)s%(sample)s.txt"
 CNS = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 1 -p %(cns_path)s%(sample)s.fa"
 #CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 5 -p %(cns5_path)s%(sample)s.fa"
 CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -m 5 -p %(cns5_path)s%(sample)s.fa"
-SAMTOOLS_INDEX = "samtools index -@ 32 %(bam_path)s%(bam_file)s"
+SAMTOOLS_INDEX = "samtools index -@ 16 %(bam_path)s%(bam_file)s"
 #variants
 VARIANTS = os.path.dirname(__file__)+"/variant_calling.sh %(bam_path)s %(vcf_path)s %(reference)s"
 

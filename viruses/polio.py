@@ -11,13 +11,13 @@ Additional analysis for polio data.
 
 
 RUN_SPADES = "spades --12 %(sample)s -o %(output_path)s --rna"
-FILTER = "bwa mem -v1 -t 32 %(reference)s %(r1)s %(r2)s | samtools view -@ 32 -b -f 2 > %(output_path)s%(sample)s.bam"
-min_FILTER = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4 > %(output_path)s%(sample)s.bam"
+FILTER = "bwa mem -v1 -t 16 %(reference)s %(r1)s %(r2)s | samtools view -@ 16 -b -f 2 > %(output_path)s%(sample)s.bam"
+min_FILTER = "bwa mem -v1 -t 16 %(reference)s %(fastq)s | samtools view -@ 16 -b -F 4 > %(output_path)s%(sample)s.bam"
 BAM2FQ = "samtools bam2fq -0n %(file)s.bam > %(file)s.fastq"
 minion_BAM2FQ = "samtools bam2fq %(file)s.bam > %(file)s.fastq"
 #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #filter out common reads
-BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b > %(output_path)s%(out_file)s.bam" #filter out common reads
-BWM_MEM_CONTIGS = "bwa mem -v1 -t 32  %(reference)s %(sample_fasta)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam"
+BWM_MEM_FASTQ = "bwa mem -v1 -t 16 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 16 -b > %(output_path)s%(out_file)s.bam" #filter out common reads
+BWM_MEM_CONTIGS = "bwa mem -v1 -t 16  %(reference)s %(sample_fasta)s | samtools view -bq 1 | samtools view -@ 16 -b -F 4- > %(output_path)s%(out_file)s.bam"
 #old mappings:###
     #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 -B 10000 %(reference)s %(fastq)s | samtools view -bq 1 | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #strict mapping (high penalty)
     #BWM_MEM_FASTQ = "bwa mem -v1 -t 32 %(reference)s %(fastq)s | samtools view -@ 32 -b -F 4- > %(output_path)s%(out_file)s.bam" #no filters
