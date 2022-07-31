@@ -1,4 +1,5 @@
-# Universal Pipeline for Viruses
+![virus_uni1](https://user-images.githubusercontent.com/73703947/182020376-e0a4fe89-ccc7-426a-8997-5cc282e051e3.jpg)
+
 ## Configuration:
 * Clone this repository.
 * In order to install all dependencies using conda, run: \
