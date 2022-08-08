@@ -18,8 +18,8 @@ def parse(file, ds=True):
     df = pd.DataFrame(columns=["GENE","START","END","STRAND"])
     
     with open(file, 'r') as  f:
-        line = f.readlines()
-    
+        lines = f.readlines()
+        
     
     f = open(file)
     while True:

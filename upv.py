@@ -120,7 +120,7 @@ if __name__ == "__main__":
         else:    
             pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
         
-    if flu_flag or cmv_flag or gb_file and not mini:  # TODO - fix flu - im not sure this aligner fits
+    if flu_flag or cmv_flag or (mutations_flag and not mini):  # TODO - fix flu - im not sure this aligner fits
         utils.create_dirs(['alignment'])
         utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
     

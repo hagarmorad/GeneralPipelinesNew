@@ -1,5 +1,4 @@
-![virus_uni1](https://user-images.githubusercontent.com/73703947/182020376-e0a4fe89-ccc7-426a-8997-5cc282e051e3.jpg)
-
+# Universal Pipeline for Viruses
 ## Configuration:
 * Clone this repository.
 * In order to install all dependencies using conda, run: \
@@ -14,6 +13,12 @@
 Don't worry about indexing the fasta file, it happens automatically.
 
  `python3 upv.py -i /input/path -r path/to/ref.fa`
+
+#### -p|--process [INT] (optional)
+Number of processes to run in parallel. \
+Note that only some of the pipeline will run in multiprocessing. \
+Be careful not to run too many processes on your CPU. \
+ `python3 upv.py -i /input/path -r path/to/ref.fa -p 3`
 
 #### --gb_file (optional)
 Parse a gene bank file. \
