@@ -240,7 +240,7 @@ def run(alignment_file,regions_csv,output):
     df["gene_name"] = gene_names
     df["nt_position_on_gene"] = position_on_gene_nt
     df["nt_position_on_genome"] = mutations_positions_nt
-    df["posision_on_p1"] = mutations_positions_nt - 749
+    #df["posision_on_p1"] = mutations_positions_nt - 749
     df["nt_position_on_genome"] += 1
     for sample, mut in mutations_by_sample_nt.items():
         df[sample+"_NT"] = mut
