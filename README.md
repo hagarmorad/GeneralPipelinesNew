@@ -12,13 +12,13 @@
 #### -r|--refseq <refseq/path/> : provide refseq path (required)
 Don't worry about indexing the fasta file, it happens automatically.
 
- `python3 upv.py -i /input/path -r path/to/ref.fa`
+ `python3 upv.py -i /fastq/path -r path/to/ref.fa`
 
 #### -p|--process [INT] (optional)
 Number of processes to run in parallel. \
 Note that only some of the pipeline will run in multiprocessing. \
 Be careful not to run too many processes on your CPU. \
- `python3 upv.py -i /input/path -r path/to/ref.fa -p 3`
+ `python3 upv.py -i /fastq/path -r path/to/ref.fa -p 3`
 
 #### --gb_file (optional)
 Parse a gene bank file. \
@@ -28,15 +28,23 @@ The result is a regions file in the same path of the gb file, containing the gen
 
 #### -m |--mutations_table (optional)
 mutations table analysis. \
-Gene bank flag is required. \
-The result is a mutation report file containing the nucleotide mutations and their translation according to the gene regions in the gb file.
- `python3 upv.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table`
+Gene bank or regions flag is required. \
+The result is a mutation report file containing the nucleotide mutations and their translation according to the gene regions in the gb file / regions file.
+ `python3 upv.py -i /fastq/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table`
  
 #### --mini (optional)
 This flag enables to run a mini version of the pipeline by inserting alignment file as an input . \
 The results are the parsed gb file and the mutations report. \
- `python3 upv.py -i /input/path -r path/to/ref.fa -gb path/to/file.gb --mutation_table --mini`
+ `python3 upv.py -i /alignment/path -r path/to/ref.fa -gb path/to/file.gb --mini`
 
+#### -rg |--regions_file (optional)
+Allows you to run --mutations_table or --mini without gene bank file. \
+Your region file must have 3 columns: GENE, START, END in csv format. \
+Consider every position in the sequence.
+ `python3 upv.py -i /alignment/path -r path/to/ref.fa -rg path/to/regions_file.csv --mini`
+ or
+ `python3 upv.py -i /fastq/path -r path/to/ref.fa -rg path/to/regions_file.csv --mutation_table`
+ 
 #### -v|--vcf (optional)
 Generate a variant calling file using gatk4. \
 This step fill the identity column in QC/report.csv file by counting the mutations in the vcf.
