@@ -40,9 +40,9 @@ The results are the parsed gb file and the mutations report. \
 #### -rg |--regions_file (optional)
 Allows you to run --mutations_table or --mini without gene bank file. \
 Your region file must have 3 columns: GENE, START, END in csv format. \
-Consider every position in the sequence.
- `python3 upv.py -i /alignment/path -r path/to/ref.fa -rg path/to/regions_file.csv --mini`
- or
+Consider every position in the sequence. \
+ `python3 upv.py -i /alignment/path -r path/to/ref.fa -rg path/to/regions_file.csv --mini` \
+ or \
  `python3 upv.py -i /fastq/path -r path/to/ref.fa -rg path/to/regions_file.csv --mutation_table`
  
 #### -v|--vcf (optional)
