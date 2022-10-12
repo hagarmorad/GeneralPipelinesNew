@@ -28,12 +28,13 @@ def parse_input():
         parser.add_argument('-c', '--cmv', action='store_true', help="cetomegalovirus (human herpesvirus 5) analysis") #store_true will store the argument as true
         parser.add_argument('-gb','--gb_file' ,help='insert gb file and get reference regions report')
         parser.add_argument('-m','--mutations_table' , action='store_true',help='mutations table reprort. gb file flag is mandatory')
+        parser.add_argument('-rg','--regions_file' ,help='insert gene regions file for mini')
         parser.add_argument('--mini' , action='store_true',help='run only mutation analysis. this flag requires --input flag as alignment file.')
         parser.add_argument('--skip_spades' , action='store_true',help='skip spades analysis used in polio and de novo classes. turn on this flag only if you already run spades once')
         parser.add_argument('-v','--vcf' , action='store_true',help='generates vcf files using gatk4. fill the identity column in the report file')
         args = parser.parse_args()
         return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, \
-                   int(args.process), args.gb_file, args.mutations_table, args.mini, args.skip_spades, args.vcf
+                   int(args.process), args.gb_file, args.regions_file, args.mutations_table, args.mini, args.skip_spades, args.vcf
         
 if __name__ == "__main__":
     
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     mutex = Lock()
     
     reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, \
-        process, gb_file, mutations_flag, mini, skip_spades, vcf = parse_input()
+        process, gb_file, regions_file, mutations_flag, mini, skip_spades, vcf = parse_input()
     
     if not mini:      
         utils.create_dirs(dirs) 
@@ -128,11 +129,12 @@ if __name__ == "__main__":
         
     if gb_file:
         parse_gb_file.parse(gb_file)
-        
+        regions_file = gb_file.replace(".gb", "_regions.csv")
+
     if mutations_flag or mini:
-        if not gb_file:
-            raise ValueError("gene bank file is required.")
+        if not gb_file and not regions_file:
+            raise ValueError("gene bank file or regions file is required.")
         utils.create_dirs(["reports"])
         aligned = fastq if mini else "alignment/all_aligned.fasta" # if mini flag is on, user must insert an alignment file instead of fastq.
-        signatures.run(aligned, gb_file.replace(".gb", "_regions.csv"), "reports/mutations.csv")
+        signatures.run(aligned, regions_file, "reports/mutations.csv")
         

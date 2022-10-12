@@ -10,7 +10,7 @@ This script is an addition to signature.py to format the output with excel rules
 import pandas as pd 
 from xlsxwriter.utility import xl_col_to_name
 
-def save_format_xl(df,num_samples):
+def save_format_xl(df,num_samples,output):
     '''
     
 
@@ -37,7 +37,7 @@ def save_format_xl(df,num_samples):
                 df.at[index,'group_change']=1
     
             
-    writer = pd.ExcelWriter('reports/mutations.xlsx', engine='xlsxwriter')
+    writer = pd.ExcelWriter(output, engine='xlsxwriter')
     df.to_excel(writer, sheet_name='Sheet1', index=False)
     workbook  = writer.book
     worksheet = writer.sheets['Sheet1']

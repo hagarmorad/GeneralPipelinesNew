@@ -140,7 +140,7 @@ def aa_sum(df, sequences):
                 no_x_aa.remove(row.iloc[0])
                 groups += aa_groups.loc[aa_groups['Abbv1'] == no_x_aa[0], 'properties'].iloc[0] + "(" + no_x_aa[0] +")"
                 df.at[index, "aa_group"] = groups
-            if len(no_x_aa) == 3:
+            if len(no_x_aa) > 2:
                 groups = aa_groups.loc[aa_groups['Abbv1'] == row.iloc[0], 'properties'].iloc[0] + "(" + row.iloc[0] +"), " 
                 no_x_aa.remove(row.iloc[0])
                 groups += aa_groups.loc[aa_groups['Abbv1'] == no_x_aa[0], 'properties'].iloc[0] + "(" + no_x_aa[0] +")"
@@ -221,11 +221,12 @@ def get_all_aa(mutations_positions_nt, sequences, gene_names, regions):
 
     return mutations_by_sample_aa
     
-def run(alignment_file,regions_csv,output):
+def run(alignment_file,regions_csv,output,polio = False):
     '''
     run all functions.
 
     '''
+    
     sequences = get_sequences(alignment_file)
     mutations_positions_nt = mutations_positions(sequences)
     mutations_by_sample_nt = mutations_by_sample(mutations_positions_nt,sequences)
@@ -240,7 +241,7 @@ def run(alignment_file,regions_csv,output):
     df["gene_name"] = gene_names
     df["nt_position_on_gene"] = position_on_gene_nt
     df["nt_position_on_genome"] = mutations_positions_nt
-    #df["posision_on_p1"] = mutations_positions_nt - 749
+    #df["posision_on_p1"] = mutations_positions_nt - 749 if polio else ""
     df["nt_position_on_genome"] += 1
     for sample, mut in mutations_by_sample_nt.items():
         df[sample+"_NT"] = mut
