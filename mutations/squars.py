@@ -23,10 +23,11 @@ def dist_mat(sequences):
     return distmat.astype('int32')
 
 def squars(distmat, title, names):
-    plt. clf()
+    plt.clf()
+    plt.figure(figsize=(9, 8))
     res=sns.heatmap(distmat, cmap="YlGnBu", yticklabels=names, xticklabels=names)
-    res.set_yticklabels(res.get_ymajorticklabels(), fontsize = 8.5)
-    
+    res.set_yticklabels(res.get_ymajorticklabels(), fontsize = 6)
+    res.set_xticklabels(res.get_xmajorticklabels(), fontsize = 6)
     plt.title(title, fontsize=16)
     plt.savefig("images/"+title+".png")
 
@@ -42,16 +43,18 @@ def mutations(sequences, start, end, names, title):
                         
         y_axis = []
         for name in names:
-            sum = differences[name].sum()
-            precents=(sum/(end-start)*100)
-            y_axis.append(name+": "+str(int(precents))+ "%")
+            #temp comment to remove precents
+            # sum = differences[name].count()
+            # precents=(sum/(end-start)*100)
+            # y_axis.append(name+": "+str(int(precents))+ "%")
+            y_axis.append(name)
         differences = differences.astype('int32')
         plt.figure(figsize=(8, 3))
         res = sns.heatmap(differences.T, cmap="YlGnBu", cbar=False, yticklabels=y_axis)
         res.set_xticklabels(res.get_xmajorticklabels(), fontsize=5.5)
         res.set_yticklabels(res.get_ymajorticklabels(), fontsize=8)
         plt.title(title, fontsize=16)
-        plt.savefig("images/"+title + " differences" + ".png")
+        plt.savefig("images/"+title + " mutations" + ".png")
 
 
 if __name__ == "__main__":

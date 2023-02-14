@@ -19,6 +19,7 @@ The code will find the mutations of the sequences and present it ordered by gene
 from sys import argv
 from math import floor
 import pandas as pd
+from Bio.Seq import Seq
 from utils.utils import translate_table, get_sequences, mutations_positions
 from utils.format_xl import save_format_xl
 ambiguous_nucleotides = ["W", "Y", "R", "S", "D","K","M","V","H","B","X"]
@@ -68,7 +69,7 @@ def get_regions(regions_csv):
         if line.upper().startswith("GENE"):
             continue
         line = line.split(",")
-        regions[line[0]] = (int(line[1]),int(line[2]))
+        regions[line[0]] = (int(line[1]),int(line[2]),line[3])
     f.close()
     return regions
 
@@ -151,7 +152,7 @@ def aa_sum(df, sequences):
             df.at[index,"R/S"] =  "S"
 
 
-def get_single_aa(seq, position, start):
+def get_single_aa(seq, position, region):
     '''
     find the translation of a codon by the reading frame of the gene.
 
@@ -170,18 +171,39 @@ def get_single_aa(seq, position, start):
         the translated amino acid.
 
     '''
+    start = region[0]
+    end = region[1]
+    strand= region[2]
     
-    pos_on_gene = position - start + 1
+    
 
-    mod = pos_on_gene % 3
-    if mod == 0:
-        codon_pos = (position - 2, position - 1, position)
-    if mod == 1:
-        codon_pos = (position, position + 1, position + 2)
-    if mod == 2:
-        codon_pos = (position - 1, position, position + 1)
+    #get codon
+    if strand == "-":
+        pos_on_gene = end - position + 1
+        mod = pos_on_gene % 3
+        if mod == 0:
+            codon_pos = (position + 2, position + 1, position)
+        if mod == 1:
+            codon_pos = (position, position - 1, position - 2)
+        if mod == 2:
+            codon_pos = (position + 1, position, position - 1)
+            
+        codon = seq[codon_pos[0]-1] + seq[codon_pos[1]-1] + seq[codon_pos[2]-1]
+        codon = str(Seq(codon).complement())
+    else:
         
-    codon = seq[codon_pos[0]-1] + seq[codon_pos[1]-1] + seq[codon_pos[2]-1]
+        pos_on_gene = position - start + 1
+        
+        mod = pos_on_gene % 3
+        if mod == 0:  # third nuc on the codon
+            codon_pos = (position - 2, position - 1, position)
+        if mod == 1:  # first nuc on the codon
+            codon_pos = (position, position + 1, position + 2)
+        if mod == 2:  # second nuc on the codon
+            codon_pos = (position - 1, position, position + 1)
+            
+        codon = seq[codon_pos[0]-1] + seq[codon_pos[1]-1] + seq[codon_pos[2]-1]
+    
     if codon in translate_table:
         aa = translate_table[codon] if not '-' in codon and not 'N' in codon else 'X'
     else:
@@ -214,14 +236,23 @@ def get_all_aa(mutations_positions_nt, sequences, gene_names, regions):
                 sample_aa.append('X')
             else:
                 pos = mutations_positions_nt[i]
-                gene_start = regions[gene_names[i]][0] 
-                aa = get_single_aa(seq, pos, gene_start)
+                region = regions[gene_names[i]]
+                aa = get_single_aa(seq, pos, region)
                 sample_aa.append(aa)
         mutations_by_sample_aa[sample] = sample_aa
 
     return mutations_by_sample_aa
     
 def run(alignment_file,regions_csv,output,polio = False):
+    
+    
+    ######test
+    seq = get_sequences("/mnt/project1/projects/HERPES/refs/NC_001806.2.fasta")["NC_001806.2_HHV1"]
+    region = (46673,47803,"-")
+    aa = get_single_aa(seq, 47797, region)
+    
+    
+    
     '''
     run all functions.
 
@@ -250,7 +281,7 @@ def run(alignment_file,regions_csv,output,polio = False):
         df[sample+"_AA"] = mut    
     
     aa_sum(df, sequences)
-    save_format_xl(df, len(sequences)-1)
+    save_format_xl(df, len(sequences)-1, output)
 
     
 if __name__ == "__main__":

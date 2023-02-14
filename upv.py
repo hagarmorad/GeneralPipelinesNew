@@ -121,10 +121,12 @@ if __name__ == "__main__":
         else:    
             pipe.results_report("BAM/", "QC/depth/", 'QC/report') #temp comment
         
-    if flu_flag or cmv_flag or (mutations_flag and not mini):  # TODO - fix flu - im not sure this aligner fits
+    if cmv_flag or (mutations_flag and not mini):  # TODO - fix flu - im not sure this aligner fits
         utils.create_dirs(['alignment'])
         utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
     
+    if flu_flag:
+        pipe.mafft()
                 
         
     if gb_file:
@@ -136,5 +138,5 @@ if __name__ == "__main__":
             raise ValueError("gene bank file or regions file is required.")
         utils.create_dirs(["reports"])
         aligned = fastq if mini else "alignment/all_aligned.fasta" # if mini flag is on, user must insert an alignment file instead of fastq.
-        signatures.run(aligned, regions_file, "reports/mutations.csv")
+        signatures.run(aligned, regions_file, "reports/mutations.xlsx")
         

@@ -20,6 +20,7 @@ def parse(file, ds=True):
     with open(file, 'r') as  f:
         lines = f.readlines()
         
+        
     
     f = open(file)
     while True:

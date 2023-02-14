@@ -75,5 +75,5 @@ class flu (general_pipe):
             reference_for_mafft.close()
 
         #run mafft
-        utils.mafft("reference_for_mafft.fa")
+        utils.mafft("reference_for_mafft.fa", "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
                     

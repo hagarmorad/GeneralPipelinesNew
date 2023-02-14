@@ -74,7 +74,7 @@ def get_sequences(alignment_file):
     for sample, record in alignment.items():
         sequences[sample] = str(record.seq).upper()
 
-        sequences[sample.split("-")[0]] = sequences.pop(sample)
+        sequences[sample.replace("Consensus_", "").split("threshold")[0]] = sequences.pop(sample)
 
     return sequences
 

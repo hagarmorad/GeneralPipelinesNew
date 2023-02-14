@@ -142,7 +142,7 @@ class general_pipe():
         
         for bam_file in os.listdir(bam_path):
                 if "sorted" in bam_file and "bai" not in bam_file:
-                    subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file), shell=True) 
+                    subprocess.call(SAMTOOLS_INDEX % dict(bam_path=bam_path, bam_file=bam_file.split(".mapped")[0]+".bam"), shell=True) 
                     total_reads = pysam.AlignmentFile(bam_path+bam_file.split(".mapped")[0]+".bam").count(until_eof=True) #need to fix 
                     coverage_stats = pysam.coverage(bam_path+bam_file).split("\t")
                     mapped_reads = int(coverage_stats[11])
