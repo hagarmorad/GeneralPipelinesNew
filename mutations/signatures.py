@@ -244,14 +244,7 @@ def get_all_aa(mutations_positions_nt, sequences, gene_names, regions):
     return mutations_by_sample_aa
     
 def run(alignment_file,regions_csv,output,polio = False):
-    
-    
-    ######test
-    seq = get_sequences("/mnt/project1/projects/HERPES/refs/NC_001806.2.fasta")["NC_001806.2_HHV1"]
-    region = (46673,47803,"-")
-    aa = get_single_aa(seq, 47797, region)
-    
-    
+        
     
     '''
     run all functions.
