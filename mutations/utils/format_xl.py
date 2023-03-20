@@ -38,9 +38,9 @@ def save_format_xl(df,num_samples,output):
     
             
     writer = pd.ExcelWriter(output, engine='xlsxwriter')
-    df.to_excel(writer, sheet_name='Sheet1', index=False)
+    df.to_excel(writer, sheet_name='mutations', index=False)
     workbook  = writer.book
-    worksheet = writer.sheets['Sheet1']
+    worksheet = writer.sheets['mutations']
     (max_row, max_col) = df.shape
     
     #-------------------------------------------------------------------

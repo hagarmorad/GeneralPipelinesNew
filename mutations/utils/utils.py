@@ -88,7 +88,7 @@ def mutations_positions(sequences, no_n = 1):
         for sample, record in sequences.items():
             if not temp:
                 temp = record[pos]
-            if no_n and record[pos] in ["N"]:
+            if no_n and (record[pos] in ["N"] or record[pos] in ["-"]) :
                 break
             if not temp == record[pos] :
                 mutations_positons.append(pos)

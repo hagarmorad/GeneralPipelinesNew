@@ -126,6 +126,7 @@ if __name__ == "__main__":
         utils.mafft(reference, "alignment/all_not_aligned.fasta", "alignment/all_aligned.fasta")
     
     if flu_flag:
+        utils.create_dirs(['alignment'])
         pipe.mafft()
                 
         
