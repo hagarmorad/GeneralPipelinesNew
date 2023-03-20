@@ -32,9 +32,10 @@ def parse_input():
         parser.add_argument('--mini' , action='store_true',help='run only mutation analysis. this flag requires --input flag as alignment file.')
         parser.add_argument('--skip_spades' , action='store_true',help='skip spades analysis used in polio and de novo classes. turn on this flag only if you already run spades once')
         parser.add_argument('-v','--vcf' , action='store_true',help='generates vcf files using gatk4. fill the identity column in the report file')
+        parser.add_argument('--cnsThresh' ,help='Minimum frequency threshold(0 - 1) to call consensus. (Default: 0.6)', default=0.6)
         args = parser.parse_args()
         return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, \
-                   int(args.process), args.gb_file, args.regions_file, args.mutations_table, args.mini, args.skip_spades, args.vcf
+                   int(args.process), args.gb_file, args.regions_file, args.mutations_table, args.mini, args.skip_spades, args.vcf, args.cnsThresh
         
 if __name__ == "__main__":
     
@@ -42,7 +43,7 @@ if __name__ == "__main__":
     mutex = Lock()
     
     reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, \
-        process, gb_file, regions_file, mutations_flag, mini, skip_spades, vcf = parse_input()
+        process, gb_file, regions_file, mutations_flag, mini, skip_spades, vcf, cnsThresh = parse_input()
     
     if not mini:      
         utils.create_dirs(dirs) 
@@ -101,7 +102,7 @@ if __name__ == "__main__":
             utils.split_bam("BAM/")
         
 
-        pipe.cns_depth("BAM/","QC/depth/","CNS/","CNS_5/") #temp comment
+        pipe.cns_depth("BAM/","QC/depth/","CNS/","CNS_5/", cnsThresh) #temp comment
         
         if flu_flag:
             pipe.concat_samples()

@@ -25,9 +25,8 @@ BWM_MEM = "bwa mem -v1 -t 16 %(reference)s %(r1)s %(r2)s | samtools view -@ 16 -
 MAPPED_BAM = "samtools view -@ 16 -b -F 4 %(output_path)s%(sample)s.bam > %(output_path)s%(sample)s.mapped.bam"
 SORT = "samtools sort -@ 14 %(output_path)s%(sample)s.mapped.bam -o %(output_path)s%(sample)s.mapped.sorted.bam"
 DEPTH = "samtools depth -a %(bam_path)s%(bam_file)s > %(depth_path)s%(sample)s.txt"
-CNS = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 1 -p %(cns_path)s%(sample)s.fa"
-#CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t 0.6 -m 5 -p %(cns5_path)s%(sample)s.fa"
-CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -m 5 -p %(cns5_path)s%(sample)s.fa"
+CNS = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t %(cnsThresh)s -m 1 -p %(cns_path)s%(sample)s.fa"
+CNS5 = "samtools mpileup -A %(bam_path)s%(bam_file)s | ivar consensus -t %(cnsThresh)s -m 5 -p %(cns5_path)s%(sample)s.fa"
 SAMTOOLS_INDEX = "samtools index -@ 16 %(bam_path)s%(bam_file)s"
 #variants
 VARIANTS = os.path.dirname(__file__)+"/variant_calling.sh %(bam_path)s %(vcf_path)s %(reference)s"
@@ -106,7 +105,7 @@ class general_pipe():
                 f.write('%s\t%s\n' % (key, value))
         
     #find mapping depth and consensus sequence 
-    def cns_depth(self, bam_path, depth_path, cns_path, cns5_path):
+    def cns_depth(self, bam_path, depth_path, cns_path, cns5_path, cnsThresh):
         '''
         Generate consensus sequences and calculate aligning depths from a bam file.
         '''
@@ -115,8 +114,8 @@ class general_pipe():
                 sample = bam_file.split(".mapped")[0] + bam_file.split(".sorted")[1].split(".bam")[0]
                 subprocess.call(DEPTH % dict(bam_path=bam_path, bam_file=bam_file, depth_path=depth_path, sample=sample), shell=True) 
                 #consensus
-                subprocess.call(CNS % dict(bam_path=bam_path, bam_file=bam_file, cns_path=cns_path, sample=sample), shell=True) 
-                subprocess.call(CNS5 % dict(bam_path=bam_path, bam_file=bam_file, cns5_path=cns5_path, sample=sample), shell=True)
+                subprocess.call(CNS % dict(bam_path=bam_path, bam_file=bam_file, cns_path=cns_path, sample=sample, cnsThresh=cnsThresh), shell=True) 
+                subprocess.call(CNS5 % dict(bam_path=bam_path, bam_file=bam_file, cns5_path=cns5_path, sample=sample, cnsThresh=cnsThresh), shell=True)
                 #remove qual files
                 os.remove(cns_path+sample+".qual.txt")
                 os.remove(cns5_path+sample+".qual.txt")
