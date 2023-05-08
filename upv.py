@@ -22,6 +22,7 @@ def parse_input():
         parser.add_argument('-i', '--input', help='fastq folder')
         parser.add_argument('-r','--reference' ,help='reference')
         parser.add_argument('-p','--process' ,help='number of processes', default=1) #number of processes to run in perallel on supported tasks
+        parser.add_argument('-mr','--multi_ref', action='store_true', help='multi fasta reference') #
         parser.add_argument('-f', '--flu', action='store_true', help="influenza segements analysis") #store_true will store the argument as true
         parser.add_argument('-d', '--de_novo', action='store_true', help="de-novo analysis") #store_true will store the argument as true
         parser.add_argument('--polio', action='store_true', help="PolioVirus analysis") #store_true will store the argument as true
@@ -35,7 +36,8 @@ def parse_input():
         parser.add_argument('--cnsThresh' ,help='Minimum frequency threshold(0 - 1) to call consensus. (Default: 0.6)', default=0.6)
         args = parser.parse_args()
         return args.reference, args.input, args.flu, args.de_novo, args.polio, args.cmv, \
-                   int(args.process), args.gb_file, args.regions_file, args.mutations_table, args.mini, args.skip_spades, args.vcf, args.cnsThresh
+                   int(args.process), args.gb_file, args.regions_file, args.mutations_table, \
+                       args.mini, args.skip_spades, args.vcf, args.cnsThresh, args.multi_ref
         
 if __name__ == "__main__":
     
@@ -43,7 +45,8 @@ if __name__ == "__main__":
     mutex = Lock()
     
     reference, fastq, flu_flag, de_novo_flag, polio_flag, cmv_flag, \
-        process, gb_file, regions_file, mutations_flag, mini, skip_spades, vcf, cnsThresh = parse_input()
+        process, gb_file, regions_file, mutations_flag, mini, \
+            skip_spades, vcf, cnsThresh, multi_ref_flag = parse_input()
     
     if not mini:      
         utils.create_dirs(dirs) 
@@ -98,7 +101,7 @@ if __name__ == "__main__":
         if polio_flag:
             pipe.map_bam()
         
-        if flu_flag:    
+        if flu_flag or multi_ref_flag:    
             utils.split_bam("BAM/")
         
 

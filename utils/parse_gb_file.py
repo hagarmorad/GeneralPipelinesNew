@@ -20,14 +20,8 @@ def parse(file, ds=True):
     with open(file, 'r') as  f:
         lines = f.readlines()
         
-        
-    
-    f = open(file)
-    while True:
-        line = f.readline().strip()
-        if not line:
-            break
-    
+    for i in range(len(lines)):
+        line = lines[i].strip()
         if line.startswith("CDS"):
             pos_list = []
             strand = "-" if "complement" in line else '+'
@@ -48,7 +42,7 @@ def parse(file, ds=True):
                 else:
                     pos_list = [line.split("CDS")[1].strip()]
             
-            gene = f.readline().strip().split('"')[1].split('"')[0]
+            gene = lines[i+1].strip().split('"')[1].split('"')[0]
             for position in pos_list:
                 position = position.split("..")
                 df = df.append({"GENE": gene,

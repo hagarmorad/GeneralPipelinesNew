@@ -97,12 +97,12 @@ class polio(general_pipe):
         
     #override
     #run general pipeline function twice (contigs based and fastq based)
-    def cns_depth(self, bam_path, depth_path, cns_path, cns5_path):
+    def cns_depth(self, bam_path, depth_path, cns_path, cns5_path, cnsThresh):
         contig_dir = "contig_based/"
         fastq_dir = "fastq_based/"
         utils.create_dirs([depth_path+contig_dir, depth_path+fastq_dir, cns_path+contig_dir, cns_path+fastq_dir, cns5_path+contig_dir,cns5_path+fastq_dir])
-        super().cns_depth(bam_path+contig_dir, depth_path+contig_dir, cns_path+contig_dir, cns5_path+contig_dir)
-        super().cns_depth(bam_path+fastq_dir, depth_path+fastq_dir, cns_path+fastq_dir, cns5_path+fastq_dir)
+        super().cns_depth(bam_path+contig_dir, depth_path+contig_dir, cns_path+contig_dir, cns5_path+contig_dir, cnsThresh)
+        super().cns_depth(bam_path+fastq_dir, depth_path+fastq_dir, cns_path+fastq_dir, cns5_path+fastq_dir, cnsThresh)
        
     #override TODO - tests
     def variant_calling(self, bam_path, vcf_path):
